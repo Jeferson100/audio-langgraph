@@ -11,11 +11,11 @@ scipy
 pygame
 groq 
 sounddevice==0.5.2
-streamlit
-streamlit_chat_widget
 elevenlabs==2.7.1
 ffmpeg
 python-dotenv
+streamlit
+streamlit-chat-widget
 streamlit_float
 
 

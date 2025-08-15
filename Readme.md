@@ -15,6 +15,7 @@ Este projeto demonstra a criação de um agente de conversação simples utiliza
 
 - Python 3.9 ou superior
 - Uma chave de API da Groq
+- Uma chave de API do ElevenLabs
 
 ## Instalação
 
