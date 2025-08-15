@@ -5,8 +5,13 @@ from streamlit_float import *
 from groq import Groq
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
-from elevenlabs.client import ElevenLabs
-from elevenlabs import play
+try:
+    from elevenlabs.client import ElevenLabs
+    from elevenlabs import play
+    ELEVENLABS_AVAILABLE = True
+except ImportError:
+    print("ElevenLabs not available, using Groq TTS only")
+    ELEVENLABS_AVAILABLE = False
 import sounddevice as sd
 from scipy.io.wavfile import write, read
 import tempfile
@@ -79,9 +84,12 @@ if (
 else:
     st.warning("Por favor, defina a chave API do ElevenLabs.")
 
-elevenlabs = ElevenLabs(
-  api_key=st.session_state.elevenlabs_api if "elevenlabs_api" in st.session_state else os.getenv("ELEVENLABS_API_KEY"),
-)
+if ELEVENLABS_AVAILABLE:
+    elevenlabs = ElevenLabs(
+      api_key=st.session_state.elevenlabs_api if "elevenlabs_api" in st.session_state else os.getenv("ELEVENLABS_API_KEY"),
+    )
+else:
+    elevenlabs = None
 
 client = Groq()
 
@@ -113,50 +121,51 @@ def play_audio(texto_input):
     else:
         cleaned_text = texto_input.content.replace("**", "")
 
-    try:
-        audio = elevenlabs.text_to_speech.convert(
-            text=cleaned_text,
-            #voice_id="JBFqnCBsd6RMkjVDRZzb",
-            #model_id="eleven_multilingual_v2",
-            #voice_id="GnDrTQvdzZ7wqAKfLzVQ",
-            #voice_id = "8ydzsJeYlXGq5mRMX93B",
-            voice_id="EIkHVdkuarjkYUyMnoes",
-            
-            model_id="eleven_multilingual_v1",
-            output_format="mp3_44100_128",
-        )
-        play(audio)
-        
-    except Exception as e:
-        print(f"Error in elevenlabs: {e}")
+    if ELEVENLABS_AVAILABLE and elevenlabs:
         try:
-            # Call Groq text-to-speech API
-            tts_response = client.audio.speech.create(
-                model="playai-tts",
-                voice="Arista-PlayAI",
-                input=cleaned_text,
-                response_format="wav"
+            audio = elevenlabs.text_to_speech.convert(
+                text=cleaned_text,
+                #voice_id="JBFqnCBsd6RMkjVDRZzb",
+                #model_id="eleven_multilingual_v2",
+                #voice_id="GnDrTQvdzZ7wqAKfLzVQ",
+                #voice_id = "8ydzsJeYlXGq5mRMX93B",
+                voice_id="EIkHVdkuarjkYUyMnoes",
+                
+                model_id="eleven_multilingual_v1",
+                output_format="mp3_44100_128",
             )
-            
-            # Create temporary file and read audio data
-            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
-                tts_response.write_to_file(temp_file.name)
-                temp_audio_file = temp_file.name
-            
-            # Read the WAV file and play with sounddevice
-            sample_rate, audio_data = read(temp_audio_file)
-            sd.play(audio_data, sample_rate)
-            sd.wait()  # Wait until the audio finishes playing
-            
+            play(audio)
+            return
         except Exception as e:
-            print(f"Error in text-to-speech: {e}")
-        finally:
-            # Clean up
-            if 'temp_audio_file' in locals():
-                try:
-                    os.unlink(temp_audio_file)
-                except:
-                    pass
+            print(f"Error in elevenlabs: {e}")
+            try:
+                # Call Groq text-to-speech API
+                tts_response = client.audio.speech.create(
+                    model="playai-tts",
+                    voice="Arista-PlayAI",
+                    input=cleaned_text,
+                    response_format="wav"
+                )
+                
+                # Create temporary file and read audio data
+                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+                    tts_response.write_to_file(temp_file.name)
+                    temp_audio_file = temp_file.name
+                
+                # Read the WAV file and play with sounddevice
+                sample_rate, audio_data = read(temp_audio_file)
+                sd.play(audio_data, sample_rate)
+                sd.wait()  # Wait until the audio finishes playing
+                
+            except Exception as e:
+                print(f"Error in text-to-speech: {e}")
+            finally:
+                # Clean up
+                if 'temp_audio_file' in locals():
+                    try:
+                        os.unlink(temp_audio_file)
+                    except:
+                        pass
 
 def app():
     st.title("Assistant Chat com Audio")
