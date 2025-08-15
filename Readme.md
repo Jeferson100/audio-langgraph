@@ -1,78 +1,64 @@
-# Audio LangGraph
+# Chatbot com LangGraph e Groq
 
-Este projeto explora a integração do processamento de áudio com LangGraph, uma biblioteca para construir aplicações robustas e com estado, multi-agentes, utilizando Large Language Models (LLMs). O objetivo é criar aplicações interativas que possam processar entrada de áudio e aproveitar LLMs para diversas tarefas.
+Este projeto demonstra a criação de um agente de conversação simples utilizando a biblioteca LangGraph para orquestrar o fluxo, com o poder do modelo de linguagem da Groq para respostas rápidas.
 
 ## Funcionalidades
 
--   **Processamento de Áudio:** Lida com entrada de áudio (ex: gravação, transcrição).
--   **Integração LangGraph:** Utiliza LangGraph para definir e gerenciar fluxos de conversação complexos e comportamentos de agentes.
--   **Notebooks Interativos:** Notebooks Jupyter (`audio_langgraph.ipynb`, `audio_ux.ipynb`) para experimentação, desenvolvimento e demonstração de funcionalidades.
--   **Gerenciamento de Estado LangGraph:** `langgraph.json` provavelmente armazena definições de grafo ou estado.
--   **Testes/Exemplos:** `teste_langgraph.py` fornece exemplos ou testes para a implementação do LangGraph.
+- **Agente Conversacional**: Responde a perguntas em português.
+- **Orquestração com LangGraph**: Utiliza um grafo de estados para gerenciar a conversa.
+- **LLM Rápido**: Integra-se com a API da Groq para inferência de alta velocidade.
+2.
+- **Gerenciamento de Dependências**: Inclui um arquivo `requirements.txt` para fácil instalação.
+- **Configuração de Ambiente**: Usa um arquivo `.env` para gerenciar chaves de API de forma segura.
 
-## Configuração
+## Pré-requisitos
 
-Para configurar o projeto, siga estes passos:
+- Python 3.9 ou superior
+- Uma chave de API da Groq
 
-1.  **Navegue até o diretório do projeto:**
+## Instalação
+
+1.  **Clone o repositório:**
     ```bash
+    git clone https://github.com/Jeferson100/audio-langgraph.git
     cd audio-langgraph
     ```
 
-2.  **Crie um ambiente virtual (recomendado):**
+2.  **Crie e ative um ambiente virtual:**
     ```bash
+    # Windows
     python -m venv .venv
-    ```
 
-3.  **Ative o ambiente virtual:**
-    *   **Windows:**
-        ```bash
-        .venv\Scripts\activate
-        ```
-    *   **macOS/Linux:**
-        ```bash
-        source .venv/bin/activate
-        ```
+    # macOS / Linux
+    python3 -m venv .venv
+    source .venv/bin/activate
 
-4.  **Instale as dependências:**
+3.  **Instale as dependências:**
     ```bash
     pip install -r requirements.txt
     ```
 
-## Uso
+4.  **Configure suas chaves de API:**
+    - Renomeie o arquivo `.env.example` para `.env`.
+    - Adicione sua chave de API da Groq ao arquivo `.env`:
+      ```env
+      GROQ_API_KEY="sua_chave_aqui"
+      ELEVENLABS_API_KEY="sua_chave_aqui" # Para uso futuro com ElevenLabs
+      ```
 
-### Notebooks Jupyter
+## Como Usar
 
-Explore os notebooks interativos para entender e executar os diferentes componentes do projeto:
+Este projeto pode ser executado de duas maneiras: atraves do notebook `audio_langgraph.ipynb` ou como uma aplicação web interativa com Streamlit.
 
-*   `audio_langgraph.ipynb`: Notebook principal demonstrando as funcionalidades centrais de áudio e LangGraph.
-*   `audio_ux.ipynb`: Foca nos aspectos de experiência do usuário relacionados à interação de áudio.
+### 1. Executando o Notebook
 
-Para executar os notebooks, certifique-se de ter o Jupyter instalado (`pip install jupyter`) e, em seguida, execute:
-```bash
-jupyter notebook
-```
-Navegue até os respectivos arquivos `.ipynb`.
+Para testar o agente use o notebook `audio_langgraph.ipynb`.
 
-### Scripts Python
+### 2. Executando a Aplicação Web (Streamlit)
 
-*   `teste_langgraph.py`: Contém exemplos de uso ou testes para a implementação do LangGraph. Você pode executá-lo diretamente:
-    ```bash
-    python teste_langgraph.py
-    ```
-
-### Streamlit App
-
-O projeto inclui uma aplicação web interativa construída com Streamlit.
-
-*   `audio_streamlit.py`: Uma aplicação de chat que permite aos usuários interagir com um assistente de IA usando tanto texto quanto entrada de áudio. A aplicação transcreve o áudio do usuário, envia para um modelo de linguagem e converte a resposta do modelo em áudio.
-
-Para executar a aplicação Streamlit, execute o seguinte comando no seu terminal:
+Para uma experiência de chat interativa, inicie a aplicação Streamlit.
 
 ```bash
 streamlit run audio_streamlit.py
 ```
-
-## Variáveis de Ambiente
-
-Variáveis de ambiente ou chaves de API podem ser necessárias para certas funcionalidades (ex: chaves de API de LLM). Consulte o arquivo `.env` (se presente) ou os notebooks/scripts para detalhes de configuração específicos.
+Após executar o comando, uma nova aba será aberta no seu navegador com a interface do chatbot.

@@ -13,7 +13,7 @@ groq
 sounddevice==0.5.2
 streamlit
 streamlit_chat_widget
-elevenlabs
+elevenlabs==2.7.1
 ffmpeg
 python-dotenv
 streamlit_float

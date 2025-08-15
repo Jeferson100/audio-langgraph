@@ -32,7 +32,6 @@ st.set_page_config(
 
 load_dotenv()
 
-
 @contextmanager
 def temp_env_vars(**kwargs):
     """
