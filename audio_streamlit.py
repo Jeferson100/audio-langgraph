@@ -24,6 +24,7 @@ from langchain_core.prompts.chat import (
     SystemMessage
 )
 from langchain_core.output_parsers import StrOutputParser
+from langgraph.checkpoint.memory import MemorySaver
 
 
 st.set_page_config(
@@ -108,9 +109,45 @@ prompt_tradutor = ChatPromptTemplate.from_messages(
 
 chat_tradutor = prompt_tradutor | chat | StrOutputParser()
 
-graph = graph_builder().compile()
+memory = MemorySaver()
 
+graph = graph_builder().compile(checkpointer=memory)
 
+def groq_audio(cleaned_text):
+    """Plays the audio response using Groq TTS."""
+     # Call Groq text-to-speech API
+
+    tts_response = client.audio.speech.create(
+                    model="playai-tts",
+                    voice="Arista-PlayAI",
+                    input=cleaned_text,
+                    response_format="wav"
+        )
+                
+        # Create temporary file and read audio data
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+        tts_response.write_to_file(temp_file.name)
+        temp_audio_file = temp_file.name
+                
+    sample_rate, audio_data = read(temp_audio_file)
+    sd.play(audio_data, sample_rate)
+    sd.wait()
+    return temp_audio_file    
+
+def elevens_audio(cleaned_text):
+    audio = elevenlabs.text_to_speech.convert(
+            text=cleaned_text,
+            #voice_id="JBFqnCBsd6RMkjVDRZzb",
+            #model_id="eleven_multilingual_v2",
+            #voice_id="GnDrTQvdzZ7wqAKfLzVQ",
+            #voice_id = "8ydzsJeYlXGq5mRMX93B",
+            voice_id="EIkHVdkuarjkYUyMnoes",
+                
+            model_id="eleven_multilingual_v1",
+            output_format="mp3_44100_128",
+            )
+    play(audio)          
+        
 def play_audio(texto_input):
     """Plays the audio response using Groq TTS."""
     
@@ -123,49 +160,22 @@ def play_audio(texto_input):
 
     if ELEVENLABS_AVAILABLE and elevenlabs:
         try:
-            audio = elevenlabs.text_to_speech.convert(
-                text=cleaned_text,
-                #voice_id="JBFqnCBsd6RMkjVDRZzb",
-                #model_id="eleven_multilingual_v2",
-                #voice_id="GnDrTQvdzZ7wqAKfLzVQ",
-                #voice_id = "8ydzsJeYlXGq5mRMX93B",
-                voice_id="EIkHVdkuarjkYUyMnoes",
-                
-                model_id="eleven_multilingual_v1",
-                output_format="mp3_44100_128",
-            )
-            play(audio)
-            return
+            elevens_audio(cleaned_text)
         except Exception as e:
             print(f"Error in elevenlabs: {e}")
-            try:
-                # Call Groq text-to-speech API
-                tts_response = client.audio.speech.create(
-                    model="playai-tts",
-                    voice="Arista-PlayAI",
-                    input=cleaned_text,
-                    response_format="wav"
-                )
-                
-                # Create temporary file and read audio data
-                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
-                    tts_response.write_to_file(temp_file.name)
-                    temp_audio_file = temp_file.name
-                
-                # Read the WAV file and play with sounddevice
-                sample_rate, audio_data = read(temp_audio_file)
-                sd.play(audio_data, sample_rate)
-                sd.wait()  # Wait until the audio finishes playing
-                
-            except Exception as e:
-                print(f"Error in text-to-speech: {e}")
-            finally:
-                # Clean up
-                if 'temp_audio_file' in locals():
-                    try:
-                        os.unlink(temp_audio_file)
-                    except:
-                        pass
+            groq_audio(cleaned_text)
+    else:
+        try:
+            temp_audio_file = groq_audio(cleaned_text)     
+        except Exception as e:
+            print(f"Error in text-to-speech: {e}")
+        finally:
+            # Clean up
+            if 'temp_audio_file' in locals():
+                try:
+                    os.unlink(temp_audio_file)
+                except:
+                    pass
 
 def app():
     st.title("Assistant Chat com Audio")
@@ -261,7 +271,7 @@ def app():
             messages.append({"role": "user", "content": user_text})
             #st.session_state.chat_history.append(user_text)
             #response = chat_prompt.invoke({"input": user_text})
-            response = graph.invoke({"messages": user_text})
+            response = graph.invoke({"messages": user_text}, config={"configurable": {"thread_id": "1"}})
             if isinstance(response["messages"][-1], str):
                 print(response["messages"][-1])
                 response = response["messages"][-1]
@@ -287,7 +297,7 @@ def app():
             translation = chat_tradutor.invoke({"input": translation.text})
             messages.append({"role": "user", "content": translation})
             #response = chat_prompt.invoke({"input": translation.text})
-            response = graph.invoke({"messages": translation})
+            response = graph.invoke({"messages": translation}, config={"configurable": {"thread_id": "1"}})
             if isinstance(response["messages"][-1], str):
                 print(response["messages"][-1])
                 response = response["messages"][-1]
